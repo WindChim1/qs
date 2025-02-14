@@ -5,7 +5,7 @@ edition = "2021"
 
 
 [dependencies]
-libp2p = { version = "0.55.0", features = [ "tokio", "cbor", "dns","mdns", "noise", "macros", "request-response", "tcp", "websocket", "yamux"] }
+libp2p = { version = "0.55.0", features = [ "tokio", "cbor", "dns","mdns", "noise", "macros", "request-response", "tcp",  "yamux", "ping"] }
 once_cell = "1.20.3"
 rand = "0.9.0"
 serde = { version = "1.0.217", features = ["derive"] }

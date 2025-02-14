@@ -2,10 +2,10 @@ use std::error::Error;
 
 use libp2p::{
     identity::Keypair,
-    mdns,
+    mdns, ping,
     request_response::{self, ProtocolSupport},
     swarm::NetworkBehaviour,
-    StreamProtocol,
+    Multiaddr, StreamProtocol,
 };
 use serde::{Deserialize, Serialize};
 
@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize};
 pub struct ChatBehaviour {
     pub mdns: libp2p::mdns::tokio::Behaviour,
     pub request_reponse: request_response::cbor::Behaviour<FileRequest, FileResponse>,
+    pub ping: ping::Behaviour,
 }
 
 impl ChatBehaviour {
@@ -26,6 +27,7 @@ impl ChatBehaviour {
                 )],
                 Default::default(),
             ),
+            ping: ping::Behaviour::new(Default::default()),
         })
     }
 }
@@ -33,6 +35,7 @@ impl ChatBehaviour {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileResponse {
     pub content: Vec<u8>,
+    pub addrs: Vec<Multiaddr>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
