@@ -36,6 +36,7 @@ impl ChatBehaviour {
 pub struct FileResponse {
     pub content: Vec<u8>,
     pub addrs: Vec<Multiaddr>,
+    pub file_name: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

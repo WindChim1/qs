@@ -37,12 +37,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
             event = swarm.select_next_some()=>match  event{
                 SwarmEvent::NewListenAddr {address,  .. } => {
                     println!("address:{}",address);
-                    local_addrs.push(address);
+                    if  !address.to_string().starts_with("/ip4/127.0.0.1/tcp/") {
+                        local_addrs.push(address);
+                    }
                 }
                 SwarmEvent::Behaviour(ChatBehaviourEvent::Mdns(event)) => match event {
 
                     libp2p::mdns::Event::Discovered(vec) => {
                         for (peer_id, _) in vec {
+                            println!("Discovered peer :{}", peer_id);
                             shared_state.discovered_perrs.insert(peer_id);
                         }
                     }
@@ -59,10 +62,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     request_response::Message::Request {
                         request, channel, ..
                     } => {
-                        if let Some((path,addrs)) = shared_state.active_passwords.get(&request.password) {
+                        if let Some((path,addrs,file_name)) = shared_state.active_passwords.get(&request.password) {
                             println!("开始传输文件");
                             let content = fs::read(path)?;
-                            let response = FileResponse { content,addrs:addrs.clone() };
+                            let response = FileResponse { content,addrs:addrs.clone(),file_name:file_name.clone() };
                             swarm
                                 .behaviour_mut()
                                 .request_reponse
@@ -77,7 +80,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         }
                     }
                     request_response::Message::Response { response, .. } => {
-                        fs::write("./received_file", response.content).unwrap();
+                        fs::write(response.file_name, response.content).unwrap();
                         println!("接收成功");
                         //发送接收成功通知
                         println!("response addrs {:?}",response.addrs);
@@ -138,10 +141,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         let varifcation_code = varifcation::gen_varif(varifcation::VARIFCATION_LEN);
                         println!("receive {}",varifcation_code);
                         let path_buf=check_file_path(file_path)?;
-
-                        shared_state
-                            .active_passwords
-                            .insert(varifcation_code, (path_buf,local_addrs.clone()));
+                        if let Some (file_name) = path_buf.file_name(){
+                            shared_state
+                                .active_passwords
+                                .insert(varifcation_code, (path_buf.clone(),local_addrs.clone(),file_name.to_str().map(|x|x.to_owned()).unwrap()));
+                        };
                     }
                     ["receive", password] => {
                         for perr_id  in &shared_state.discovered_perrs {
@@ -155,7 +159,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     }
                     _ => {}
                 }
-                println!("{line}")
             },
             _ = ctrl_c()=>{
                 process::exit(0)

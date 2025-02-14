@@ -12,7 +12,7 @@ pub fn build_swarm(local_key: Keypair) -> Result<Swarm<ChatBehaviour>, Box<dyn E
             noise::Config::new,
             yamux::Config::default,
         )?
-        .with_behaviour(|b| ChatBehaviour::new(local_key).unwrap())?
+        .with_behaviour(|k| ChatBehaviour::new(k.clone()).unwrap())?
         .build();
 
     Ok(swarm)
