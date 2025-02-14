@@ -70,7 +70,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                                 .unwrap();
                             println!("发送成功");
                             //接收到对方接收完成信号后退出程序
-                            if let SwarmEvent::Behaviour(ChatBehaviourEvent::Ping(_)) = swarm.select_next_some().await {
+                            if let SwarmEvent::Behaviour(ChatBehaviourEvent::Ping(event)) = swarm.select_next_some().await {
+                                println!("{event:?}");
                                 break;
                             }
                         }
@@ -79,8 +80,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         fs::write("./received_file", response.content).unwrap();
                         println!("接收成功");
                         //发送接收成功通知
+                        println!("response addrs {:?}",response.addrs);
+                        //发送接收成功通知
                         for addr in response.addrs{
-                        swarm.dial(addr)?;
+                            println!("dial addr {}",addr);
+                            swarm.dial(addr)?;
                         }
                         break;
                     }
@@ -98,9 +102,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                             if let  SwarmEvent::Behaviour(ChatBehaviourEvent::RequestReponse(request_response::Event::Message {  message:request_response::Message::Response {  response,.. },.. })) = swarm.select_next_some().await{
                                 fs::write("./received_file", response.content).unwrap();
                                 println!("接收成功");
+                                println!("response addrs {:?}",response.addrs);
                                 //发送接收成功通知
                                 for addr in response.addrs{
-                                swarm.dial(addr)?;
+                                    println!("dial addr {}",addr);
+                                    swarm.dial(addr)?;
                                 }
                                 break;
                             }
